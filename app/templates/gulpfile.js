@@ -8,7 +8,7 @@ var lrserver = lr();
 var $ = require('gulp-load-plugins')();
 
 var paths = {
-  scripts: ['js/*.js'],
+  scripts: ['app/scripts/*.js'],
   html: ['./*.html']
 };
 
@@ -17,12 +17,12 @@ var livereloadport = 35729,
 
 gulp.task('scripts', function() {
     // Single entry point to browserify
-    return gulp.src('js/index.js')
+    return gulp.src('app/scripts/index.js')
         .pipe($.browserify({
           insertGlobals : true,
           debug : false
         }))
-        .pipe(gulp.dest('dist/js'))
+        .pipe(gulp.dest('dist/app/scripts'))
         .pipe($.livereload(lrserver));
 });
 

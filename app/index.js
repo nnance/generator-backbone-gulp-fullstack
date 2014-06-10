@@ -17,39 +17,15 @@ var BackboneFullstackGenerator = yeoman.generators.Base.extend({
     this.env.options.appPath = this.options.appPath || 'app';
     this.config.set('appPath', this.env.options.appPath);
 
-    this.testFramework = this.options['test-framework'] || 'mocha';
-    this.templateFramework = this.options['template-framework'] || 'lodash';
-
-    if (['backbone-fullstack:app', 'backbone-fullstack'].indexOf(this.options.namespace) >= 0) {
-      this.hookFor(this.testFramework, {
-        as: 'app',
-        options: {
-          'skip-install': this.options['skip-install'],
-          'ui': this.options.ui
-        }
-      });
-    }
-
     this.config.defaults({
       appName: this.appname,
       ui: this.options.ui,
       coffee: this.options.coffee,
-      testFramework: this.testFramework,
-      templateFramework: this.templateFramework,
       compassBootstrap: this.compassBootstrap,
       includeRequireJS: this.includeRequireJS
     });
 
     this.indexFile = this.readFileAsString(path.join(this.sourceRoot(), 'index.html'));
-
-    this.on('end', function () {
-      if (['backbone-fullstack:app', 'backbone-fullstack'].indexOf(this.options.namespace) >= 0) {
-        if (/^.*test$/.test(process.cwd())) {
-          process.chdir('..');
-        }
-        this.installDependencies({ skipInstall: this.options['skip-install'] });
-      }
-    });
   },
 
   init: function () {
