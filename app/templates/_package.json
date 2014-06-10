@@ -1,5 +1,28 @@
 {
   "name": "package",
   "version": "0.0.0",
-  "dependencies": {}
+  "dependencies": {
+    "backbone": "~1.1.0",
+    "jquery": "~2.1.0"
+  },
+  "devDependencies": {
+    "browserify": "~3.24.11",
+    "browserify-shim": "~3.2.2",
+    "gulp-util": "~2.2.14",
+    "gulp": "~3.6.2",
+    "gulp-browserify": "~0.4.2",
+    "gulp-load-plugins": "~0.3.0",
+    "gulp-embedlr": "~0.5.2",
+    "gulp-livereload": "~1.0.1",
+    "tiny-lr": "0.0.5",
+    "ecstatic": "~0.4.13"
+  },
+  "browserify": {
+    "transform": [
+      "browserify-shim"
+    ]
+  },
+  "browserify-shim": {
+    "./node_modules/jquery/dist/jquery.js": "$"
+  }
 }

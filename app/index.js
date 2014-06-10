@@ -7,6 +7,51 @@ var chalk = require('chalk');
 
 
 var BackboneFullstackGenerator = yeoman.generators.Base.extend({
+  constructor: function () {
+    yeoman.generators.Base.apply(this, arguments);
+
+    this.argument('app_name', { type: String, required: false });
+    this.appname = this.app_name || this.appname;
+    this.appname = this._.classify(this.appname);
+
+    this.env.options.appPath = this.options.appPath || 'app';
+    this.config.set('appPath', this.env.options.appPath);
+
+    this.testFramework = this.options['test-framework'] || 'mocha';
+    this.templateFramework = this.options['template-framework'] || 'lodash';
+
+    if (['backbone-fullstack:app', 'backbone-fullstack'].indexOf(this.options.namespace) >= 0) {
+      this.hookFor(this.testFramework, {
+        as: 'app',
+        options: {
+          'skip-install': this.options['skip-install'],
+          'ui': this.options.ui
+        }
+      });
+    }
+
+    this.config.defaults({
+      appName: this.appname,
+      ui: this.options.ui,
+      coffee: this.options.coffee,
+      testFramework: this.testFramework,
+      templateFramework: this.templateFramework,
+      compassBootstrap: this.compassBootstrap,
+      includeRequireJS: this.includeRequireJS
+    });
+
+    this.indexFile = this.readFileAsString(path.join(this.sourceRoot(), 'index.html'));
+
+    this.on('end', function () {
+      if (['backbone-fullstack:app', 'backbone-fullstack'].indexOf(this.options.namespace) >= 0) {
+        if (/^.*test$/.test(process.cwd())) {
+          process.chdir('..');
+        }
+        this.installDependencies({ skipInstall: this.options['skip-install'] });
+      }
+    });
+  },
+
   init: function () {
     this.pkg = require('../package.json');
 
@@ -21,7 +66,7 @@ var BackboneFullstackGenerator = yeoman.generators.Base.extend({
     var done = this.async();
 
     // Have Yeoman greet the user.
-    this.log(yosay('Welcome to the marvelous BackboneFullstack generator!'));
+    this.log(yosay('Welcome to the marvelous backbone-fullstack generator!'));
 
     var prompts = [{
       type: 'confirm',
@@ -42,7 +87,16 @@ var BackboneFullstackGenerator = yeoman.generators.Base.extend({
     this.mkdir('app/templates');
 
     this.copy('_package.json', 'package.json');
-    this.copy('_bower.json', 'bower.json');
+    this.copy('gulpfile.js', 'gulpfile.js');
+    this.copy('index.html', 'index.html');
+
+    this.copy('app/404.html', this.env.options.appPath + '/404.html');
+    this.copy('app/favicon.ico', this.env.options.appPath + '/favicon.ico');
+    this.copy('app/robots.txt', this.env.options.appPath + '/robots.txt');
+    this.copy('app/htaccess', this.env.options.appPath + '/.htaccess');
+
+    this.copy('app/scripts/index.js', this.env.options.appPath + '/scripts/index.js');
+    this.copy('app/scripts/app-view.js', this.env.options.appPath + '/scripts/app-view.js');
   },
 
   projectfiles: function () {
