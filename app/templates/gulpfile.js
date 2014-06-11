@@ -1,61 +1,131 @@
-var http = require('http');
+'use strict';
+// generated on <%= (new Date).toISOString().split('T')[0] %> using <%= pkg.name %> <%= pkg.version %>
 var gulp = require('gulp');
-var ecstatic = require('ecstatic');
-var lr = require('tiny-lr');
-var lrserver = lr();
-
-// Load plugins
 var $ = require('gulp-load-plugins')();
+var rimraf = require('rimraf');
 
-var paths = {
-  scripts: ['app/scripts/*.js'],
-  html: ['./*.html']
-};
+gulp.task('styles', function () {<% if (includeSass) { %>
+    return gulp.src('app/styles/main.scss')
+        .pipe($.rubySass({
+            style: 'expanded',
+            precision: 10
+        }))<% } else { %>
+    return gulp.src('app/styles/main.css')<% } %>
+        .pipe($.autoprefixer('last 1 version'))
+        .pipe(gulp.dest('.tmp/styles'));
+});
 
-var livereloadport = 35729,
-    serverport = 5001;
+gulp.task('jshint', function () {
+    return gulp.src('app/scripts/**/*.js')
+        .pipe($.jshint())
+        .pipe($.jshint.reporter('jshint-stylish'))
+        .pipe($.jshint.reporter('fail'));
+});
 
-gulp.task('scripts', function() {
-    // Single entry point to browserify
-    return gulp.src('app/scripts/index.js')
-        .pipe($.browserify({
-          insertGlobals : true,
-          debug : false
+gulp.task('html', ['styles'], function () {<% if (includeBootstrap && includeSass) { %>
+    var lazypipe = require('lazypipe');
+    var cssChannel = lazypipe()
+      .pipe($.csso)
+      .pipe($.replace, 'bower_components/bootstrap-sass-official/vendor/assets/fonts/bootstrap','fonts');<% } %>
+
+    return gulp.src('app/*.html')
+        .pipe($.useref.assets({searchPath: '{.tmp,app}'}))
+        .pipe($.if('*.js', $.uglify()))<% if (includeBootstrap && includeSass) { %>
+        .pipe($.if('*.css', cssChannel()))<% } else { %>
+        .pipe($.if('*.css', $.csso()))<% } %>
+        .pipe($.useref.restore())
+        .pipe($.useref())
+        .pipe(gulp.dest('dist'));
+});
+
+gulp.task('images', function () {
+    return gulp.src('app/images/**/*')
+        .pipe($.cache($.imagemin({
+            progressive: true,
+            interlaced: true
+        })))
+        .pipe(gulp.dest('dist/images'));
+});
+
+gulp.task('fonts', function () {
+    var streamqueue = require('streamqueue');
+    return streamqueue({objectMode: true},
+            $.bowerFiles(),
+            gulp.src('app/fonts/**/*')
+        )
+        .pipe($.filter('**/*.{eot,svg,ttf,woff}'))
+        .pipe($.flatten())
+        .pipe(gulp.dest('dist/fonts'));
+});
+
+gulp.task('extras', function () {
+    return gulp.src(['app/*.*', '!app/*.html'], {dot: true})
+        .pipe(gulp.dest('dist'));
+});
+
+gulp.task('clean', function (cb) {
+    rimraf('.tmp', function () {
+        rimraf('dist', cb);
+    });
+});
+
+gulp.task('connect', function () {
+    var connect = require('connect');
+    var app = connect()
+        .use(require('connect-livereload')({port: 35729}))
+        .use(connect.static('app'))
+        .use(connect.static('.tmp'))
+        // paths to bower_components should be relative to the current file
+        // e.g. in app/index.html you should use ../bower_components
+        .use('/bower_components', connect.static('bower_components'))
+        .use(connect.directory('app'));
+
+    require('http').createServer(app)
+        .listen(9000)
+        .on('listening', function () {
+            console.log('Started connect web server on http://localhost:9000');
+        });
+});
+
+gulp.task('serve', ['connect'<% if (includeSass) { %>, 'styles'<% } %>], function () {
+    require('opn')('http://localhost:9000');
+});
+
+// inject bower components
+gulp.task('wiredep', function () {
+    var wiredep = require('wiredep').stream;
+<% if (includeSass) { %>
+    gulp.src('app/styles/*.scss')
+        .pipe(wiredep({directory: 'bower_components'}))
+        .pipe(gulp.dest('app/styles'));
+<% } %>
+    gulp.src('app/*.html')
+        .pipe(wiredep({
+            directory: 'bower_components'<% if (includeSass && includeBootstrap) { %>,
+            exclude: ['bootstrap-sass-official']<% } %>
         }))
-        .pipe(gulp.dest('dist/app/scripts'))
-        .pipe($.livereload(lrserver));
+        .pipe(gulp.dest('app'));
 });
 
-gulp.task('html', function() {
-    return gulp.src(paths.html)
-        .pipe($.embedlr())
-        .pipe(gulp.dest('dist/'))
-        .pipe($.livereload(lrserver));
+gulp.task('watch', ['connect', 'serve'], function () {
+    $.livereload.listen();
+
+    // watch for changes
+    gulp.watch([
+        'app/*.html',
+        '.tmp/styles/**/*.css',
+        'app/scripts/**/*.js',
+        'app/images/**/*'
+    ]).on('change', $.livereload.changed);
+
+    gulp.watch('app/styles/**/*.<%= includeSass ? 'scss' : 'css' %>', ['styles']);
+    gulp.watch('bower.json', ['wiredep']);
 });
 
-gulp.task('compass', function() {
-	return gulp.src('styles/*.sass')
-		.pipe($.compass({
-			css: 'dist',
-			sass: 'styles/sass'
-		}));
+gulp.task('build', ['jshint', 'html', 'images', 'fonts', 'extras'], function () {
+    return gulp.src('dist/**/*').pipe($.size({title: 'build', gzip: true}));
 });
 
-gulp.task('serve', function() {
-  //Set up our static fileserver, which serves files in the build dir
-  http.createServer(ecstatic({ root: __dirname + '/dist' })).listen(serverport);
-
-  //Set up our livereload server
-  lrserver.listen(livereloadport);
+gulp.task('default', ['clean'], function () {
+    gulp.start('build');
 });
-
-// Rerun the task when a file changes
-gulp.task('watch', function () {
-  gulp.watch(paths.scripts, ['scripts']);
-  gulp.watch(paths.html, ['html']);
-});
-
-// The default task (called when you run `gulp` from cli)
-gulp.task('default', ['scripts', 'html', 'serve', 'watch']);
-
-gulp.task('build', ['scripts', 'html']);
