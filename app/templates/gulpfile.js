@@ -33,6 +33,14 @@ gulp.task('html', function() {
         .pipe($.livereload(lrserver));
 });
 
+gulp.task('compass', function() {
+	return gulp.src('styles/*.sass')
+		.pipe($.compass({
+			css: 'dist',
+			sass: 'styles/sass'
+		}));
+});
+
 gulp.task('serve', function() {
   //Set up our static fileserver, which serves files in the build dir
   http.createServer(ecstatic({ root: __dirname + '/dist' })).listen(serverport);

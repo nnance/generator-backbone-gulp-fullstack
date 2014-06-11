@@ -66,6 +66,8 @@ var BackboneFullstackGenerator = yeoman.generators.Base.extend({
     this.copy('gulpfile.js', 'gulpfile.js');
     this.copy('index.html', 'index.html');
 
+    this.copy('main.scss', 'styles/main.scss');
+
     this.copy('app/404.html', this.env.options.appPath + '/404.html');
     this.copy('app/favicon.ico', this.env.options.appPath + '/favicon.ico');
     this.copy('app/robots.txt', this.env.options.appPath + '/robots.txt');
