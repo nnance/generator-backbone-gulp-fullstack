@@ -10,7 +10,7 @@ require.config
     jquery: '../bower_components/jquery/dist/jquery'
     backbone: '../bower_components/backbone/backbone'
     underscore: '../bower_components/underscore/underscore'<% if (includeSass) { %>,
-    bootstrap: '../bower_components/bootstrap-sass-official/vendor/assets/javascript'<% } %>
+    bootstrap: '../bower_components/bootstrap-sass-official/vendor/assets/javascripts/bootstrap'<% } %>
 
 require [
   'backbone'
