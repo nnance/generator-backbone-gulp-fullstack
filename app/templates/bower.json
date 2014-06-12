@@ -5,6 +5,10 @@
     "bootstrap-sass-official": "~3.1.1",<% } else { %>
     "bootstrap": "~3.1.1",<% }} if (includeModernizr) { %>
     "modernizr": "~2.8.1",<% } %>
-    "jquery": "~2.1.1"
+    "jquery": "~2.1.1",
+    "underscore": "~1.6.0",
+    "backbone": "~1.1.1",
+    "requirejs": "~2.1.10",
+    "requirejs-text": "~2.0.10"
   }
 }
