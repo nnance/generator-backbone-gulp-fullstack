@@ -11,6 +11,9 @@ var wiredep = require('wiredep');
 var AppGenerator = module.exports = function Appgenerator(args, options, config) {
   yeoman.generators.Base.apply(this, arguments);
 
+  // always use requireJS
+  this.includeRequireJS = true
+
   // setup the test-framework property, gulpfile template will need this
   this.testFramework = options['test-framework'] || 'mocha';
 
@@ -30,6 +33,9 @@ var AppGenerator = module.exports = function Appgenerator(args, options, config)
 
   this.options = options;
   this.pkg = JSON.parse(this.readFileAsString(path.join(__dirname, '../package.json')));
+
+  this.env.options.appPath = this.options.appPath || 'app';
+  this.config.set('appPath', this.env.options.appPath);
 };
 
 util.inherits(AppGenerator, yeoman.generators.Base);
@@ -59,6 +65,10 @@ AppGenerator.prototype.askFor = function askFor() {
       name: 'Modernizr',
       value: 'includeModernizr',
       checked: true
+    },{
+      name: 'Use CoffeeScript',
+      value: 'coffee',
+      checked: this.options.coffee || false
     }]
   }];
 
@@ -74,6 +84,7 @@ AppGenerator.prototype.askFor = function askFor() {
     this.includeSass = hasFeature('includeSass');
     this.includeBootstrap = hasFeature('includeBootstrap');
     this.includeModernizr = hasFeature('includeModernizr');
+    this.coffee = hasFeature('coffee');
 
     cb();
   }.bind(this));
@@ -93,7 +104,12 @@ AppGenerator.prototype.git = function () {
 };
 
 AppGenerator.prototype.bower = function () {
-  this.copy('bower.json', 'bower.json');
+  this.template('bowerrc', '.bowerrc');
+  this.template('bower.json', 'bower.json');
+};
+
+AppGenerator.prototype.main = function () {
+  this.template('bower.json', 'bower.json');
 };
 
 AppGenerator.prototype.jshint = function () {
@@ -117,8 +133,20 @@ AppGenerator.prototype.mainStylesheet = function () {
 };
 
 AppGenerator.prototype.writeIndex = function () {
+    if (this.includeRequireJS) {
+      return;
+    }
+
   this.indexFile = this.readFileAsString(path.join(this.sourceRoot(), 'index.html'));
   this.indexFile = this.engine(this.indexFile, this);
+
+  var vendorJS = [
+    'bower_components/jquery/dist/jquery.js',
+    'bower_components/underscore/underscore.js',
+    'bower_components/backbone/backbone.js'
+  ];
+
+  this.indexFile = this.appendScripts(this.indexFile, 'scripts/vendor.js', vendorJS);
 
   // wire Bootstrap plugins
   if (this.includeBootstrap) {
@@ -147,6 +175,18 @@ AppGenerator.prototype.writeIndex = function () {
   });
 };
 
+AppGenerator.prototype.writeIndexWithRequirejs = function () {
+    if (!this.includeRequireJS) {
+      return;
+    }
+    this.indexFile = this.readFileAsString(path.join(this.sourceRoot(), 'index.html'));
+    this.indexFile = this.engine(this.indexFile, this);
+
+    this.indexFile = this.appendScripts(this.indexFile, 'scripts/main.js', [
+      'bower_components/requirejs/require.js'
+    ], {'data-main': 'scripts/main'});
+};
+
 AppGenerator.prototype.app = function () {
   this.mkdir('app');
   this.mkdir('app/scripts');
@@ -154,7 +194,7 @@ AppGenerator.prototype.app = function () {
   this.mkdir('app/images');
   this.mkdir('app/fonts');
   this.write('app/index.html', this.indexFile);
-  this.write('app/scripts/main.js', 'console.log(\'\\\'Allo \\\'Allo!\');');
+  this.template('requirejs_app' + this.getSuffix(), 'app/scripts/main.js');
 };
 
 AppGenerator.prototype.install = function () {
@@ -177,18 +217,20 @@ AppGenerator.prototype.install = function () {
       var bowerJson = JSON.parse(fs.readFileSync('./bower.json'));
 
       // wire Bower packages to .html
-      wiredep({
-        bowerJson: bowerJson,
-        directory: 'bower_components',
-        exclude: ['bootstrap-sass'],
-        src: 'app/index.html'
-      });
+      if (!this.includeRequireJS) {
+        wiredep({
+          bowerJson: bowerJson,
+          directory: 'bower_components',
+          exclude: ['bootstrap-sass'],
+          src: 'app/index.html'
+        });
+      }
 
       if (this.includeSass) {
         // wire Bower packages to .scss
         wiredep({
           bowerJson: bowerJson,
-          directory: 'bower_components',
+          directory: 'app/bower_components',
           src: 'app/styles/*.scss'
         });
       }
@@ -196,4 +238,13 @@ AppGenerator.prototype.install = function () {
       done();
     }.bind(this)
   });
+};
+
+AppGenerator.prototype.getSuffix = function () {
+    var scriptSuffix = '.js';
+
+    if (this.env.options.coffee || this.coffee) {
+      scriptSuffix = '.coffee';
+    }
+    return scriptSuffix;
 };
