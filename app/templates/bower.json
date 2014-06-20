@@ -9,6 +9,11 @@
     "underscore": "~1.6.0",
     "backbone": "~1.1.1",
     "requirejs": "~2.1.10",
-    "requirejs-text": "~2.0.10"
+    "requirejs-text": "~2.0.10",
+    "backbone.viewmanager": "https://github.com/nnance/backbone-viewmanager.git",
+    "backbone.localstorage": "~1.1.7",
+    "backbone.modelbinder": "~1.0.5",
+    "backbone.validation": "~0.7.1",
+    "moment": "~2.6.0"
   }
 }
