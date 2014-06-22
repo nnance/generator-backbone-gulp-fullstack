@@ -38,6 +38,12 @@ gulp.task('html', ['styles'], function () {<% if (includeBootstrap && includeSas
         .pipe(gulp.dest('dist'));
 });
 
+gulp.task('jst', function() {
+    gulp.src('app/scripts/templates/**/*.ejs')
+        .pipe($.jst())
+        .pipe(gulp.dest('./tmp/templates'));
+});
+
 gulp.task('images', function () {
     return gulp.src('app/images/**/*')
         .pipe($.cache($.imagemin({
@@ -122,7 +128,7 @@ gulp.task('watch', ['connect', 'serve'], function () {
     gulp.watch('bower.json', ['wiredep']);
 });
 
-gulp.task('build', ['jshint', 'html', 'images', 'fonts', 'extras'], function () {
+gulp.task('build', ['jshint', 'html', 'jst', 'images', 'fonts', 'extras'], function () {
     return gulp.src('dist/**/*').pipe($.size({title: 'build', gzip: true}));
 });
 
