@@ -1,4 +1,4 @@
-# generator-backbone-fullstack [![Build Status](https://secure.travis-ci.org/nnance/generator-backbone-fullstack.png?branch=master)](https://travis-ci.org/nnance/generator-backbone-fullstack)
+# generator-backbone-gulp-fullstack [![Build Status](https://secure.travis-ci.org/nnance/generator-backbone-gulp-fullstack.png?branch=master)](https://travis-ci.org/nnance/generator-backbone-gulp-fullstack)
 
 > [Yeoman](http://yeoman.io) generator
 
@@ -23,10 +23,10 @@ $ npm install -g yo
 
 Yeoman travels light. He didn't pack any generators when he moved in. You can think of a generator like a plug-in. You get to choose what type of application you wish to create, such as a Backbone application or even a Chrome extension.
 
-To install generator-backbone-fullstack from npm, run:
+To install generator-backbone-gulp-fullstack from npm, run:
 
 ```bash
-$ npm install -g generator-backbone-fullstack
+$ npm install -g generator-backbone-gulp-fullstack
 ```
 
 Finally, initiate the generator:
